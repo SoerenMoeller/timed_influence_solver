@@ -1,5 +1,7 @@
 from collections import namedtuple
 
+# TODO: should time alwasys be positive? / begin at zero
+
 
 class TimeStatement(namedtuple('TimeStatement', ['start', 'end', 'lower', 'upper', 'lower_offset', 'upper_offset'])):
     """
@@ -25,8 +27,8 @@ class TimeStatement(namedtuple('TimeStatement', ['start', 'end', 'lower', 'upper
     __slots__ = ()
 
     @classmethod
-    def create_time_statement(st: tuple[str, float, float, float, float, float, float]):
-        return TimeStatement(st[1], st[2], st[3], st[4], st[5], st[6])
+    def create_time_statement(self, st: tuple[str, tuple, tuple, tuple]):
+        return TimeStatement(st[1][0], st[1][1], st[2][0], st[2][1], st[3][0], st[3][1])
 
     def __new__(cls, start, end, lower, upper, lower_offset, upper_offset):
         return super(TimeStatement, cls).__new__(cls, start, end, lower, upper, lower_offset, upper_offset)

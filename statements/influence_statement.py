@@ -27,8 +27,8 @@ class InfluenceStatement(namedtuple('InfluenceStatement', ['start', 'end', 'lowe
     __slots__ = ()
 
     @classmethod
-    def create_influence_statement(st: tuple[str, float, float, float, float, float, float, str]):
-        return InfluenceStatement(st[1], st[2], st[3], st[4], st[5], st[6])
+    def create_influence_statement(self, st: tuple[str, tuple, tuple, tuple, str]):
+        return InfluenceStatement(st[1][0], st[1][1], st[2][0], st[2][1], st[3][0], st[3][1])
 
     def __new__(cls, start, end, lower, upper, min_pitch, max_pitch):
         return super(InfluenceStatement, cls).__new__(cls, start, end, lower, upper, min_pitch, max_pitch)
@@ -36,5 +36,22 @@ class InfluenceStatement(namedtuple('InfluenceStatement', ['start', 'end', 'lowe
     def __repr__(self):
         return f"InfluenceStatement({self.start}, {self.end}, {self.lower}, "  +\
             f"{self.upper}, {self.min_pitch}, {self.max_pitch})"
+
+    def __eq__(self, other):
+        return all(getattr(self, fld) == getattr(other, fld) for fld in self._fields)
+
+    def __hash__(self):
+        return hash(getattr(self, fld) for fld in self._fields)
+
+    def __cmp__(self, other):
+        if self.start != other.start:
+            return -1 if self.start < other.start else 1
+        return 0
+
+    def __lt__(self, other):
+        return self.__cmp__(other) < 0
+
+    def __gt__(self, other):
+        return self.__cmp__(other) > 0
 
     __str__ = __repr__
