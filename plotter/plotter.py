@@ -1,15 +1,14 @@
-from typing import Union
+from ctypes import Union
+
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-from statements.influence_statement import InfluenceStatement
-from statements.time_statement import TimeStatement
+
+from statements.influence_statement import IStatement
+from statements.rectangle_statement import RStatement
+from statements.trapezoid_statement import TStatement
 
 
-# TODO: Plot statements involving time
-# after that, influecing ones
-
-
-def plot_statements(statements_mapping: dict, influenced: list[Union[str, tuple[str, str]]], hypothesis: tuple):
+def plot_statements(mapping: dict, variables: set[str | tuple[str, str]], hypothesis=None):
     """
     Plots model using matplotlib. This only builds the plots, they are shown using the show_plot method
 
@@ -18,11 +17,13 @@ def plot_statements(statements_mapping: dict, influenced: list[Union[str, tuple[
         influences (list): list of variable pairs, whose statements should be plotted
     """
 
-    time_influenced = [elem for elem in influenced if type(elem) == str]
-    influence_pairs = [elem for elem in influenced if elem not in time_influenced]
+    time_variable_influences = [elem for elem in variables if type(elem) == str and not elem.endswith("'")]
+    time_derivation_influences = [elem for elem in variables if type(elem) == str and elem.endswith("'")]
+    variable_derivation_influence = [elem for elem in variables if type(elem) == tuple]
 
-    _setup_plot(statements_mapping, time_influenced, hypothesis)
-    _setup_plot(statements_mapping, influence_pairs, hypothesis)
+    _setup_plot(mapping, time_variable_influences, hypothesis)
+    _setup_plot(mapping, time_derivation_influences, hypothesis)
+    _setup_plot(mapping, variable_derivation_influence, hypothesis)
 
 
 def _setup_plot(statements_mapping: dict, influenced, hypothesis: tuple):
@@ -74,54 +75,52 @@ def _plot_axis(axis, index: int, hypothesis: tuple, statements_mapping: dict, in
     margin_x: float = offset_x / 30
     margin_y: float = offset_y / 6
     axis[index].axis([min_x - margin_x, max_x + margin_x, min_y - margin_y, max_y + margin_y])
-    axis[index].set(xlabel=influenced, ylabel="t")
+    axis[index].set(xlabel="t", ylabel=influenced)
 
     # plot the statements
     for st in statements:
-        if type(influenced) == str:
-            plot_time_statement(axis[index], st)
+        if isinstance(st, TStatement):
+            _plot_t_statement(axis[index], st)
             continue
-        plot_influence_statement(axis[index], st)
+        _plot_r_statement(axis[index], st)
 
     # plot highlighted hypothesis
     if hypothesis is not None and hypothesis[0] == influenced:
-        statement_interval: TimeStatement = TimeStatement.create_time_statement(hypothesis)
-        plot_time_statement(axis[index], statement_interval, "red")
+        statement_interval: RStatement = RStatement.create(hypothesis)
+        _plot_r_statement(axis[index], statement_interval, "red")
 
 
-def plot_time_statement(ax, statement: TimeStatement, color="black"):
+def _plot_t_statement(ax, st: TStatement, color="black"):
     """
     Plots a given statement by drawing its borders and inserting the quality in the center
 
     Parameters:
         ax: current axis
-        statement (Statement): statement to draw
+        st (Statement): statement to draw
         color (str): color of the statement
     """
-    # create window
-    rect = mpatches.Polygon([(statement.start, statement.lower), (statement.end, statement.lower + statement.lower_offset),
-                             (statement.end, statement.upper  + statement.upper_offset), (statement.start, statement.upper)],
-                              fill=False,
-                              alpha=1,
-                              color=color,
-                              linewidth=0.5)
+    rect = mpatches.Polygon(st.get_coordinates(),
+                            fill=False,
+                            alpha=1,
+                            color=color,
+                            linewidth=0.5)
     ax.add_patch(rect)
 
 
-def plot_influence_statement(ax, statement: InfluenceStatement, color="black"):
+def _plot_r_statement(ax, st: RStatement, color="black"):
     """
     Plots a given statement by drawing its borders and inserting the quality in the center
 
     Parameters:
         ax: current axis
-        statement (Statement): statement to draw
+        st (Statement): statement to draw
         color (str): color of the statement
     """
 
-    bottom: float = statement.start
-    left: float = statement.lower
-    width: float = statement.end - statement.start
-    height: float = statement.upper - statement.lower
+    bottom: float = st.start
+    left: float = st.lower
+    width: float = st.end - st.start
+    height: float = st.upper - st.lower
 
     # create window
     rect = mpatches.Rectangle((bottom, left), width, height,
@@ -131,11 +130,13 @@ def plot_influence_statement(ax, statement: InfluenceStatement, color="black"):
                               linewidth=0.5)
     ax.add_patch(rect)
 
-    rx, ry = rect.get_xy()
-    cx = rx + rect.get_width() / 2.0
-    cy = ry + rect.get_height() / 2.0
-    ax.annotate(f"[{statement.min_pitch}, {statement.max_pitch}]", (cx, cy), color='black', weight='bold',
-                fontsize=10, ha='center', va='center')
+    if isinstance(st, IStatement):
+        st.__class__ = IStatement
+        rx, ry = rect.get_xy()
+        cx = rx + rect.get_width() / 2.0
+        cy = ry + rect.get_height() / 2.0
+        ax.annotate(f"[{st.min_slope}, {st.max_slope}]", (cx, cy), color='black', weight='bold',
+                    fontsize=10, ha='center', va='center')
 
 
 def show_plot():

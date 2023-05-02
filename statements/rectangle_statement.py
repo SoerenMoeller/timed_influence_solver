@@ -1,0 +1,53 @@
+from collections import namedtuple
+
+
+class RStatement:
+    """
+    Internal representation of rectangular statements. They are used for influences of the form:
+        t -> a, t -> a'
+    Visually, this can be interpreted as an rectangle with coordinates:
+        (start, lower), (end, lower ), (end, upper), (start, upper)
+
+    namedtuple
+    ----------
+    start (float):
+        start value of range interval
+    end (float):
+        end value of range interval
+    lower (float):
+        start value of domain interval
+    upper (float):
+        end value of domain interval
+    """
+
+    @classmethod
+    def create(cls, st: tuple[str, tuple, tuple, str]):
+        return RStatement(st[1][0], st[1][1], st[2][0], st[2][1])
+
+    def __init__(self, start, end, lower, upper):
+        self.start = start
+        self.end = end
+        self.lower = lower
+        self.upper = upper
+
+    def __repr__(self):
+        return f"RStatement({self.start}, {self.end}, {self.lower}, {self.upper})"
+
+    def __eq__(self, other):
+        return all(getattr(self, fld) == getattr(other, fld) for fld in ["start", "end", "lower", "upper"])
+
+    def __hash__(self):
+        return hash((self.start. self.end, self.lower, self.upper))
+
+    def __cmp__(self, other):
+        if self.start != other.start:
+            return -1 if self.start < other.start else 1
+        return 0
+
+    def __lt__(self, other):
+        return self.__cmp__(other) < 0
+
+    def __gt__(self, other):
+        return self.__cmp__(other) > 0
+
+    __str__ = __repr__

@@ -1,5 +1,6 @@
 from solver.solver import Solver
 import examples.wolves_sheep_model as wolves_sheep
+from statements.influence_statement import IStatement
 
 
 def main():
