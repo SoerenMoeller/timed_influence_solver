@@ -75,7 +75,9 @@ def _plot_axis(axis, index: int, hypothesis: tuple, statements_mapping: dict, in
     margin_x: float = offset_x / 30
     margin_y: float = offset_y / 6
     axis[index].axis([min_x - margin_x, max_x + margin_x, min_y - margin_y, max_y + margin_y])
-    axis[index].set(xlabel="t", ylabel=influenced)
+    x_label = "t" if influenced == str else influenced[0]
+    y_label = influenced if influenced == str else "t"
+    axis[index].set(xlabel=x_label, ylabel=y_label)
 
     # plot the statements
     for st in statements:

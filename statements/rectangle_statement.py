@@ -30,6 +30,11 @@ class RStatement:
         self.lower = lower
         self.upper = upper
 
+    def overlaps(self, start, end=None):
+        if end is None:
+            return self.overlaps(start.begin, start.end)
+        return start <= self.end and end >= self.start
+
     def __repr__(self):
         return f"RStatement({self.start}, {self.end}, {self.lower}, {self.upper})"
 
@@ -37,7 +42,7 @@ class RStatement:
         return all(getattr(self, fld) == getattr(other, fld) for fld in ["start", "end", "lower", "upper"])
 
     def __hash__(self):
-        return hash((self.start. self.end, self.lower, self.upper))
+        return hash((self.start, self.end, self.lower, self.upper))
 
     def __cmp__(self, other):
         if self.start != other.start:

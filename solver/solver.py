@@ -1,61 +1,97 @@
+import functools
+
 from plotter.plotter import show_plot, plot_statements
-from statements.variable_derivation_container import VariableDerivationContainer
-from statements.influence_statement import IStatement
+from solver.rules import transitivity_rule
 from statements.rectangle_statement import RStatement
-from statements.time_derivation_container import TimeDerivationContainer
-from statements.time_variable_container import TimeVariableContainer
-from statements.trapezoid_statement import TStatement
+from statements.statement_queue import StatementQueue
 
 
 class Solver:
 
     def __init__(self, statements=None):
-        self._var_der_influence: dict[tuple[str, str], VariableDerivationContainer] = {}
-        self._time_var_influence: dict[str, TimeVariableContainer] = {}
-        self._time_der_influence: dict[str, TimeDerivationContainer] = {}
+        self._dependency_graph: dict[str, set[str]] = {}
+        self._st_queue = StatementQueue()
 
         if statements is not None:
             self.add(statements)
 
     def add(self, statement):
-        if type(statement) == tuple:
-            statement = {statement}
-
-        for elem in statement:
-            is_influence: bool = type(elem[-1]) == str
-            self._add_influence(elem) if is_influence else self._add_time_influence(elem)
-
-    def _add_influence(self, statement: tuple[str, tuple, tuple, tuple, str]):
-        influence: tuple[str, str] = statement[0], statement[-1]
-        if influence not in self._var_der_influence:
-            self._var_der_influence[influence] = VariableDerivationContainer()
-
-        self._var_der_influence[influence].add(IStatement.create(statement))
-
-    def _add_time_influence(self, statement):
-        variable: str = statement[0]
-        container = self._time_der_influence if variable.endswith("'") else self._time_var_influence
-
-        if len(statement) == 3:
-            if variable not in container:
-                container[variable] = TimeDerivationContainer()
-            container[variable].add(RStatement.create(statement))
-            return
-
-        if variable not in container:
-            container[variable] = TimeVariableContainer()
-        container[variable].add(TStatement.create(statement))
+        self._st_queue.add_extern(statement)
 
     def solve(self, hypothesis: tuple) -> bool:
-        self.plot(hypothesis)
+        self._create_dependency_graph()
+        self._st_queue.init()
+
+        # if variable is a sink, that's not part of the hypothesis, remove it
+        variable: str = hypothesis[0]
+        hypothesis_st = RStatement.create(hypothesis)
+        self._remove_sink(variable)
+        self._remove_influences_without_time()
+
+        # TODO: check if hypothesis true already?
+
+        # need initial value
+        #if variable not in self._st_queue.time_influence:
+        #    return False
+#
+        #if min(self._st_queue.time_influence[variable].get_statements()).start > hypothesis_st.start:
+        #    return False
+
+        #print(self._st_queue.next_st())
+        while next_st := self._st_queue.next_st():
+            print("hi")
+            var, st = next_st
+
+            if var.endswith("'"):
+                self._apply_cdr(var, st)
+            else:
+                self._apply_transitive(var, st)
+
+        print(self._st_queue.time_influence)
+        self._plot(hypothesis)
         return False
 
-    def plot(self, hypothesis):
-        plot_statements(self._var_der_influence | self._time_der_influence | self._time_var_influence,
-                        self._var_der_influence.keys() | self._time_var_influence.keys() |
-                        self._time_der_influence.keys(), hypothesis)
+    def _apply_cdr(self, variable: str, statement):
+        influence = variable[:-1]
+        time_var_model = self._st_queue.time_influence[influence]
+        #time_var_model.envelope()
+
+    def _apply_transitive(self, variable: str, statement):
+        influences = filter(lambda k: k[0] == variable, self._st_queue.var_der_influence.keys())
+
+        for k in influences:
+            var_der_model = self._st_queue.var_der_influence[k]
+            enveloped = var_der_model.envelope(statement.lower, statement.upper)
+            if enveloped is None:
+                continue
+
+            for st in enveloped:
+                new_st = transitivity_rule(statement, st)
+                if new_st is None:
+                    continue
+                self._st_queue.add(f"{variable}'", new_st)
+
+    def _remove_influences_without_time(self):
+        self._dependency_graph = {a: self._dependency_graph[a] for a in self._dependency_graph
+                                  if a in self._st_queue.time_influence}
+
+    def _remove_sink(self, variable: str):
+        variable += "'"
+        values = functools.reduce(lambda a, b: a.union(b), self._dependency_graph.values(), set())
+        values.difference(self._dependency_graph.keys())
+
+        self._dependency_graph = {a: self._dependency_graph[a].difference(values) for a in self._dependency_graph}
+
+    def _create_dependency_graph(self):
+        for a, b in self._st_queue.var_der_influence.keys():
+            if a not in self._dependency_graph:
+                self._dependency_graph[a] = set()
+            self._dependency_graph[a].add(b)
+
+    def _plot(self, hypothesis):
+        plot_statements(self._st_queue.all_statements(),
+                        self._st_queue.all_statements().keys(), hypothesis)
         show_plot()
-        pass
 
     def __str__(self) -> str:
         return ""
