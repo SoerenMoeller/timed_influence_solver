@@ -1,15 +1,15 @@
 from typing import Union
 
-from statements.influence_statement import IStatement
-from statements.rectangle_statement import RStatement
+from statements.vd_statement import IStatement
+from statements.td_statement import RStatement
 from statements.time_container import TimeContainer
-from statements.trapezoid_statement import TStatement
-from statements.variable_derivation_container import VariableDerivationContainer
+from statements.tv_statement import TStatement
+from statements.vd_container import VDContainer
 
 
 class StatementQueue:
     def __init__(self):
-        self.var_der_influence: dict[tuple[str, str], VariableDerivationContainer] = {}
+        self.var_der_influence: dict[tuple[str, str], VDContainer] = {}
         self.time_influence: dict[str, TimeContainer] = {}
 
     def add_extern(self, statement):
@@ -28,7 +28,7 @@ class StatementQueue:
     def _add_influence(self, statement: tuple[str, tuple, tuple, tuple, str]):
         influence: tuple[str, str] = statement[0], statement[-1]
         if influence not in self.var_der_influence:
-            self.var_der_influence[influence] = VariableDerivationContainer()
+            self.var_der_influence[influence] = VDContainer()
 
         self.var_der_influence[influence].add(IStatement.create(statement))
 

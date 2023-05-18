@@ -1,17 +1,16 @@
 import bisect
 
-from statements.influence_statement import IStatement
-from statements.rectangle_statement import RStatement
+from statements.vd_statement import VDStatement
 
 
-class VariableDerivationContainer:
+class VDContainer:
     def __init__(self):
-        self._statements: set[IStatement] = set()
+        self._statements: set[VDStatement] = set()
         self._normalized = []
-        self._overlap_map: dict[float, set[IStatement]] = {}
+        self._overlap_map: dict[float, set[VDStatement]] = {}
         self._s_points: list[float] = []
 
-    def add(self, st: IStatement):
+    def add(self, st: VDStatement):
         self._statements.add(st)
 
     def get_statements(self):
@@ -30,7 +29,7 @@ class VariableDerivationContainer:
             s_points, o_map = construct_map(self._overlap_map[point], x=False)
 
             sts = {
-                IStatement(point, next_point, s_points[j], s_points[j+1],
+                VDStatement(point, next_point, s_points[j], s_points[j+1],
                            max(map(lambda st: st.min_slope, o_map[s_points[j]])),
                            min(map(lambda st: st.max_slope, o_map[s_points[j]])))
                 for j in range(len(s_points) - 1)

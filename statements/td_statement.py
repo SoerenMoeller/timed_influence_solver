@@ -1,7 +1,7 @@
 from collections import namedtuple
 
 
-class RStatement:
+class TDStatement:
     """
     Internal representation of rectangular statements. They are used for influences of the form:
         t -> a, t -> a'
@@ -22,7 +22,7 @@ class RStatement:
 
     @classmethod
     def create(cls, st: tuple[str, tuple, tuple, str]):
-        return RStatement(st[1][0], st[1][1], st[2][0], st[2][1])
+        return TDStatement(st[1][0], st[1][1], st[2][0], st[2][1])
 
     def __init__(self, start, end, lower, upper):
         self.start = start
@@ -36,7 +36,7 @@ class RStatement:
         return start <= self.end and end >= self.start
 
     def __repr__(self):
-        return f"RStatement({self.start}, {self.end}, {self.lower}, {self.upper})"
+        return f"TDStatement({self.start}, {self.end}, {self.lower}, {self.upper})"
 
     def __eq__(self, other):
         return all(getattr(self, fld) == getattr(other, fld) for fld in ["start", "end", "lower", "upper"])

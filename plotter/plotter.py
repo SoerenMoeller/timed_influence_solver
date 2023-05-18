@@ -3,9 +3,9 @@ from ctypes import Union
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 
-from statements.influence_statement import IStatement
-from statements.rectangle_statement import RStatement
-from statements.trapezoid_statement import TStatement
+from statements.vd_statement import VDStatement
+from statements.td_statement import TDStatement
+from statements.tv_statement import TVStatement
 
 
 def plot_statements(mapping: dict, variables: set[str | tuple[str, str]], hypothesis=None):
@@ -81,18 +81,18 @@ def _plot_axis(axis, index: int, hypothesis: tuple, statements_mapping: dict, in
 
     # plot the statements
     for st in statements:
-        if isinstance(st, TStatement):
+        if isinstance(st, TVStatement):
             _plot_t_statement(axis[index], st)
             continue
         _plot_r_statement(axis[index], st)
 
     # plot highlighted hypothesis
     if hypothesis is not None and hypothesis[0] == influenced:
-        statement_interval: RStatement = RStatement.create(hypothesis)
+        statement_interval: TDStatement = TDStatement.create(hypothesis)
         _plot_r_statement(axis[index], statement_interval, "red")
 
 
-def _plot_t_statement(ax, st: TStatement, color="black"):
+def _plot_t_statement(ax, st: TVStatement, color="black"):
     """
     Plots a given statement by drawing its borders and inserting the quality in the center
 
@@ -109,7 +109,7 @@ def _plot_t_statement(ax, st: TStatement, color="black"):
     ax.add_patch(rect)
 
 
-def _plot_r_statement(ax, st: RStatement, color="black"):
+def _plot_r_statement(ax, st: TDStatement, color="black"):
     """
     Plots a given statement by drawing its borders and inserting the quality in the center
 
@@ -132,8 +132,8 @@ def _plot_r_statement(ax, st: RStatement, color="black"):
                               linewidth=0.5)
     ax.add_patch(rect)
 
-    if isinstance(st, IStatement):
-        st.__class__ = IStatement
+    if isinstance(st, VDStatement):
+        st.__class__ = VDStatement
         rx, ry = rect.get_xy()
         cx = rx + rect.get_width() / 2.0
         cy = ry + rect.get_height() / 2.0

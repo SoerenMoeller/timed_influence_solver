@@ -1,8 +1,8 @@
 from typing import Union
 
-from statements.influence_statement import IStatement
-from statements.rectangle_statement import RStatement
-from statements.trapezoid_statement import TStatement
+from statements.vd_statement import IStatement
+from statements.td_statement import RStatement
+from statements.tv_statement import TStatement
 
 
 def transitivity_rule(st_a: RStatement, st_b: IStatement) -> Union[RStatement, None]:
@@ -18,17 +18,6 @@ def smallest_rectangle_rule(st: TStatement) -> RStatement:
         st.start, st.end,
         min(st.lower, st.lower + (st.start - st.end) * st.slope_lower),
         max(st.upper, st.upper + (st.end - st.start) * st.upper))
-
-
-def to_trapezoid_rule(st: RStatement) -> TStatement:
-    return TStatement(st.start, st.end, st.lower, st.upper, 0, 0)
-
-
-def to_rectangle_rule(st: TStatement) -> Union[RStatement, None]:
-    if st.slope_lower != 0 or st.slope_upper != 0:
-        return None
-
-    return RStatement(st.start, st.end, st.lower, st.upper)
 
 
 def cdi_rule(st_a: TStatement, st_b: RStatement) -> Union[TStatement, None]:

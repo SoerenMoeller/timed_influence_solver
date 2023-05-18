@@ -1,7 +1,7 @@
-from statements.rectangle_statement import RStatement
+from statements.td_statement import TDStatement
 
 
-class TStatement(RStatement):
+class TVStatement(TDStatement):
     """
     Internal representation of statements
     Visually, this can be interpreted as an trapeze with coordidinates:
@@ -25,7 +25,7 @@ class TStatement(RStatement):
 
     @classmethod
     def create(cls, st: tuple[str, tuple, tuple, tuple]):
-        return TStatement(st[1][0], st[1][1], st[2][0], st[2][1], st[3][0], st[3][1])
+        return TVStatement(st[1][0], st[1][1], st[2][0], st[2][1], st[3][0], st[3][1])
 
     def __init__(self, start, end, lower, upper, slope_lower, slope_upper):
         super().__init__(start, end, lower, upper)
@@ -45,8 +45,13 @@ class TStatement(RStatement):
                 (self.end, self.upper + (self.end - self.start) * self.slope_upper),
                 (self.end, self.lower + (self.end - self.start) * self.slope_lower)]
 
+    def intersect(self, other):
+        # lo_l = l_1 + (l_2 - l_1) * (tl-t2)/(t2-t1) = l_1' + (l_2' - l_1') * (tl-t1)/(t2-t1)
+        #      = (l_1 + (l_2 - l_1) * (tl-t2)/(t2-t1) - l_1')/(l_2' - l_1') * (t2-t1) + t1 = tl
+        pass
+
     def __repr__(self):
-        return f"TStatement({self.start}, {self.end}, {self.lower}, " +\
+        return f"TVStatement({self.start}, {self.end}, {self.lower}, " +\
             f"{self.upper}, {self.slope_lower}, {self.slope_upper})"
 
     __str__ = __repr__
