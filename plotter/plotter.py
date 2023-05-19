@@ -21,9 +21,12 @@ def plot_statements(mapping: dict, variables: set[str | tuple[str, str]], hypoth
     time_derivation_influences = [elem for elem in variables if type(elem) == str and elem.endswith("'")]
     variable_derivation_influence = [elem for elem in variables if type(elem) == tuple]
 
-    _setup_plot(mapping, time_variable_influences, hypothesis)
-    _setup_plot(mapping, time_derivation_influences, hypothesis)
-    _setup_plot(mapping, variable_derivation_influence, hypothesis)
+    if time_variable_influences:
+        _setup_plot(mapping, time_variable_influences, hypothesis)
+    if time_derivation_influences:
+        _setup_plot(mapping, time_derivation_influences, hypothesis)
+    if variable_derivation_influence:
+        _setup_plot(mapping, variable_derivation_influence, hypothesis)
 
 
 def _setup_plot(statements_mapping: dict, influenced, hypothesis: tuple):
@@ -62,7 +65,7 @@ def _plot_axis(axis, index: int, hypothesis: tuple, statements_mapping: dict, in
 
     # get min/max values
     min_x, max_x = min(st.start for st in statements), max(st.end for st in statements)
-    min_y, max_y = min(st.lower for st in statements), max(st.upper for st in statements)
+    min_y, max_y = min(st.lower_r for st in statements), max(st.upper_r for st in statements)
     if hypothesis is not None and hypothesis[0] == influenced:
         min_x = min(min_x, hypothesis[1][0])
         max_x = max(max_x, hypothesis[1][1])

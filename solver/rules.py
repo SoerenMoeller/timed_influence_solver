@@ -16,7 +16,7 @@ def transitivity_rule(st_a: RStatement, st_b: IStatement) -> Union[RStatement, N
 def smallest_rectangle_rule(st: TStatement) -> RStatement:
     return RStatement(
         st.start, st.end,
-        min(st.lower, st.lower + (st.start - st.end) * st.slope_lower),
+        min(st.lower, st.lower + (st.start - st.end) * st.lower_r),
         max(st.upper, st.upper + (st.end - st.start) * st.upper))
 
 
@@ -26,7 +26,7 @@ def cdi_rule(st_a: TStatement, st_b: RStatement) -> Union[TStatement, None]:
 
     overlap_iv: tuple[float, float] = max(st_a.start, st_b.start), min(st_a.end, st_b.end)
     return TStatement(overlap_iv[0], overlap_iv[1], st_a.lower, st_a.upper,
-                      max(st_a.slope_lower, st_b.lower), min(st_a.slope_upper, st_b.upper))
+                      max(st_a.lower_r, st_b.lower), min(st_a.upper_r, st_b.upper))
 
 
 def cdr_rule(st_a: RStatement, st_b: RStatement) -> Union[TStatement, None]:
