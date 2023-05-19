@@ -35,6 +35,11 @@ class TDStatement:
             return self.overlaps(start.begin, start.end)
         return start <= self.end and end >= self.start
 
+    def intersect(self, other):
+        return TDStatement(
+            max(self.start, other.start), min(self.end, other.end),
+            max(self.lower, other.lower), min(self.upper, other.upper))
+
     def __repr__(self):
         return f"TDStatement({self.start}, {self.end}, {self.lower}, {self.upper})"
 
