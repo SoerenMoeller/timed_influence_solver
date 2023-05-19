@@ -34,5 +34,37 @@ class TVContainer(ContainerBase):
 
         self._statements = self._statements[:overlap_start] + result + self._statements[overlap_end:]
 
-        # TODO: normalize
+        index: int = overlap_start - 1 if overlap_start > 0 else overlap_start
+        while index < len(self._statements):
+            current = self._statements[index]
+            changed = False
+            print(index)
+            if index - 1 >= 0:
+                pre = self._statements[index-1]
+                if pre.lower_r > current.lower:
+                    diff = pre.lower_r - current.lower
+                    current.lower += diff
+                    current.lower_r += diff
+                    changed = True
+                if pre.upper_r < current.upper:
+                    diff = pre.upper_r - current.upper
+                    current.upper -= diff
+                    current.upper_r -= diff
+                    changed = True
+            if index + 1 < len(self._statements):
+                suc = self._statements[index+1]
+                if suc.lower > current.lower_r:
+                    diff = suc.lower - current.lower_r
+                    current.lower += diff
+                    current.lower_r += diff
+                    changed = True
+                if suc.upper < current.upper_r:
+                    diff = suc.upper - current.upper_r
+                    current.upper -= diff
+                    current.upper_r -= diff
+                    changed = True
 
+            if changed and index != 0:
+                index -= 1
+            else:
+                index += 1
