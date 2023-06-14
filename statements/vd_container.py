@@ -14,7 +14,11 @@ class VDContainer:
         self._statements.add(st)
 
     def get_statements(self):
-        return [st for sts in self._normalized for st in sts]
+        return list(self._statements)
+        #return [st for sts in self._normalized for st in sts]
+
+    def envelope(self, start: float, end: float) -> set:
+        return {st for st in self._statements if st.start <= start and st.end >= end}
 
     def init(self):
         # init bounds
@@ -29,21 +33,21 @@ class VDContainer:
             s_points, o_map = construct_map(self._overlap_map[point], x=False)
 
             sts = {
-                VDStatement(point, next_point, s_points[j], s_points[j+1],
-                           max(map(lambda st: st.min_slope, o_map[s_points[j]])),
-                           min(map(lambda st: st.max_slope, o_map[s_points[j]])))
+                VDStatement(point, next_point, s_points[j], s_points[j + 1],
+                            max(map(lambda st: st.min_slope, o_map[s_points[j]])),
+                            min(map(lambda st: st.max_slope, o_map[s_points[j]])))
                 for j in range(len(s_points) - 1)
                 if o_map[s_points[j]]
             }
             self._normalized.append(sts)
 
-    def overlap(self, start: float, end: float) -> list:
-        i, j = get_overlap_index(self._s_points, start, end)
-        return self._normalized[i:j]
+    #def overlap(self, start: float, end: float) -> list:
+    #    i, j = get_overlap_index(self._s_points, start, end)
+    #    return self._normalized[i:j]
 
-    def envelope(self, start: float, end: float) -> list:
-        e = [st for st in self.overlap(start, end) if next(iter(st)).start <= start and next(iter(st)).end >= end]
-        return e[0] if e else None
+    #def envelope(self, start: float, end: float) -> list:
+    #    e = [st for st in self.overlap(start, end) if next(iter(st)).start <= start and next(iter(st)).end >= end]
+    #    return e[0] if e else None
 
 
 def construct_map(sts, x=True):

@@ -32,7 +32,7 @@ class TDStatement:
 
     def overlaps(self, start, end=None):
         if end is None:
-            return self.overlaps(start.begin, start.end)
+            return self.overlaps(start.start, start.end)
         return start <= self.end and end >= self.start
 
     def intersect(self, other):

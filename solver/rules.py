@@ -1,39 +1,49 @@
 from typing import Union
 
-from statements.vd_statement import IStatement
-from statements.td_statement import RStatement
-from statements.tv_statement import TStatement
+from statements.vd_statement import VDStatement
+from statements.td_statement import TDStatement
+from statements.tv_statement import TVStatement
 
 
-def transitivity_rule(st_a: RStatement, st_b: IStatement) -> Union[RStatement, None]:
+def transitivity_rule(st_a: TDStatement, st_b: VDStatement) -> Union[TDStatement, None]:
     if not _envelopes((st_b.start, st_b.end), (st_a.lower, st_a.upper)):
         return None
 
-    return RStatement(
+    return TDStatement(
         st_a.start + st_b.lower, st_a.end + st_b.upper, st_b.min_slope, st_b.max_slope)
 
 
-def smallest_rectangle_rule(st: TStatement) -> RStatement:
-    return RStatement(
+def smallest_rectangle_rule(st: TVStatement) -> TDStatement:
+    return TDStatement(
         st.start, st.end,
         min(st.lower, st.lower + (st.start - st.end) * st.lower_r),
         max(st.upper, st.upper + (st.end - st.start) * st.upper))
 
 
-def cdi_rule(st_a: TStatement, st_b: RStatement) -> Union[TStatement, None]:
-    if not _overlaps((st_a.start, st_a.end), (st_b.start, st_b.end)):
-        return None
-
-    overlap_iv: tuple[float, float] = max(st_a.start, st_b.start), min(st_a.end, st_b.end)
-    return TStatement(overlap_iv[0], overlap_iv[1], st_a.lower, st_a.upper,
-                      max(st_a.lower_r, st_b.lower), min(st_a.upper_r, st_b.upper))
-
-
-def cdr_rule(st_a: RStatement, st_b: RStatement) -> Union[TStatement, None]:
+def cdl_rule(st_a: TVStatement, st_b: TDStatement) -> Union[TVStatement, None]:
     if not st_b.start <= st_a.start <= st_b.end:
         return None
 
-    return TStatement(st_b.start, st_b.end, st_a.lower, st_a.upper, st_b.lower, st_b.upper)
+    st_a_cpy = st_a.copy()
+    st_a_cpy.relax(st_a.start, st_b.start)
+
+    return TVStatement(st_b.start, st_b.end,
+                       st_a_cpy.lower + (st_b.end - st_b.start) * st_b.upper,
+                       st_a_cpy.upper + (st_b.end - st_b.start) * st_b.lower,
+                       st_a_cpy.lower, st_a_cpy.upper)
+
+
+def cdr_rule(st_a: TVStatement, st_b: TDStatement) -> Union[TVStatement, None]:
+    if not st_b.start <= st_a.start <= st_b.end:
+        return None
+
+    st_a_cpy = st_a.copy()
+    st_a_cpy.relax(st_a.start, st_b.start)
+
+    return TVStatement(st_b.start, st_b.end,
+                       st_a_cpy.lower_r, st_a_cpy.upper_r,
+                       st_a_cpy.lower_r + (st_b.end - st_b.start) * st_b.lower,
+                       st_a_cpy.upper_r + (st_b.end - st_b.start) * st_b.upper)
 
 
 # helper functions

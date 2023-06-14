@@ -8,7 +8,7 @@ from statements.td_statement import TDStatement
 from statements.tv_statement import TVStatement
 
 
-def plot_statements(mapping: dict, variables: set[str | tuple[str, str]], hypothesis=None):
+def plot_statements(tv_container, td_container, vd_container, tv_influences, td_influences, vd_influences, hypothesis=None):
     """
     Plots model using matplotlib. This only builds the plots, they are shown using the show_plot method
 
@@ -17,19 +17,12 @@ def plot_statements(mapping: dict, variables: set[str | tuple[str, str]], hypoth
         influences (list): list of variable pairs, whose statements should be plotted
     """
 
-    time_variable_influences = [elem for elem in variables if type(elem) == str and not elem.endswith("'")]
-    time_derivation_influences = [elem for elem in variables if type(elem) == str and elem.endswith("'")]
-    variable_derivation_influence = [elem for elem in variables if type(elem) == tuple]
-
-    if time_variable_influences:
-        _setup_plot(mapping, time_variable_influences, hypothesis)
-    if time_derivation_influences:
-        _setup_plot(mapping, time_derivation_influences, hypothesis)
-    if variable_derivation_influence:
-        _setup_plot(mapping, variable_derivation_influence, hypothesis)
+    _setup_plot(tv_container, tv_influences, hypothesis)
+    _setup_plot(td_container, td_influences, hypothesis, derivative=True)
+    _setup_plot(vd_container, vd_influences, hypothesis, derivative=True)
 
 
-def _setup_plot(statements_mapping: dict, influenced, hypothesis: tuple):
+def _setup_plot(container: dict, influenced, hypothesis: tuple, derivative=False):
     # setup amount of plots
     _, axis = plt.subplots(max(len(influenced), 2))  # when using subplots, at least 2 are needed
 
@@ -42,13 +35,13 @@ def _setup_plot(statements_mapping: dict, influenced, hypothesis: tuple):
                         hspace=1)
 
     for index, influence in enumerate(influenced):
-        if influence not in statements_mapping:
+        if influence not in container:
             continue
 
-        _plot_axis(axis, index, hypothesis, statements_mapping, influence)
+        _plot_axis(axis, index, hypothesis, container, influence, derivative)
 
 
-def _plot_axis(axis, index: int, hypothesis: tuple, statements_mapping: dict, influenced):
+def _plot_axis(axis, index: int, hypothesis: tuple, statements_mapping: dict, influenced, derivative):
     """
     Sets up the axis range as needed and plots the statements onto them
 
@@ -65,7 +58,10 @@ def _plot_axis(axis, index: int, hypothesis: tuple, statements_mapping: dict, in
 
     # get min/max values
     min_x, max_x = min(st.start for st in statements), max(st.end for st in statements)
-    min_y, max_y = min(st.lower_r for st in statements), max(st.upper_r for st in statements)
+    if statements and isinstance(statements[0], TDStatement):
+        min_y, max_y = min(st.lower for st in statements), max(st.upper for st in statements)
+    else:
+        min_y, max_y = min(st.lower_r for st in statements), max(st.upper_r for st in statements)
     if hypothesis is not None and hypothesis[0] == influenced:
         min_x = min(min_x, hypothesis[1][0])
         max_x = max(max_x, hypothesis[1][1])
@@ -78,8 +74,10 @@ def _plot_axis(axis, index: int, hypothesis: tuple, statements_mapping: dict, in
     margin_x: float = offset_x / 30
     margin_y: float = offset_y / 6
     axis[index].axis([min_x - margin_x, max_x + margin_x, min_y - margin_y, max_y + margin_y])
-    x_label = "t" if influenced == str else influenced[0]
-    y_label = influenced if influenced == str else "t"
+    x_label = "t" if isinstance(influenced, str) else influenced[0]
+    y_label = influenced if isinstance(influenced, str) else influenced[1]
+    if derivative:
+        y_label += "'"
     axis[index].set(xlabel=x_label, ylabel=y_label)
 
     # plot the statements

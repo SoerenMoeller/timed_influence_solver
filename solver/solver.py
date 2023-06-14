@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 from plotter.plotter import show_plot, plot_statements
+from solver.rules import transitivity_rule
 from statements.td_statement import TDStatement
 from statements.td_container import TDContainer
 from statements.tv_container import TVContainer
@@ -35,7 +36,7 @@ class Solver:
     def _add_st(self, st: tuple):
         if len(st) == 5:
             statement = VDStatement.create(st)
-            container = self._td_statements
+            container = self._vd_statements
             var = (st[0], st[-1])
         elif len(st) == 4:
             statement = TVStatement.create(st)
@@ -49,6 +50,8 @@ class Solver:
         container[var].add(statement)
 
     def solve(self, hypothesis: tuple) -> bool:
+        #for con in self._vd_statements.values():
+        #    con.init()
         #self._create_dependency_graph()
 
         # if variable is a sink, that's not part of the hypothesis, remove it
@@ -77,8 +80,42 @@ class Solver:
         #        self._apply_transitive(var, st)
 
         #print(self._st_queue.time_influence)
+
+        i: int = 0
+        while i < 1000:
+
+            for var in self._tv_statements.keys():
+                self._apply_transitive(var)
+                self._tv_statements[var].clear_new()
+            i += 1
+
         self._plot(hypothesis)
         return False
+
+    def _apply_transitive(self, variable: str):
+        tv_container = self._tv_statements[variable]
+        for st_a in tv_container.newly_created:
+            influences = filter(lambda k: k[0] == variable, self._vd_statements.keys())
+
+            for k in influences:
+                vd_container = self._vd_statements[k]
+                enveloped_sts = vd_container.envelope(st_a.lower, st_a.upper)
+
+                for st_b in enveloped_sts:
+                    new_st = transitivity_rule(st_a, st_b)
+
+                    if new_st is not None:
+                        self._td_statements[k[1]].add(new_st)
+
+    def _apply_cd(self, variable: str):
+        tv_container = self._tv_statements[variable]
+        td_container = self._td_statements[variable]
+
+        for st_a in tv_container.newly_created:
+            overlapping = td_container.overlap(st)
+
+            for st_b in overlapping:
+                new_st = cdr
 
     #def _apply_cdr(self, variable: str, statement):
     #    influence = variable[:-1]
@@ -118,8 +155,8 @@ class Solver:
     #        self._dependency_graph[a].add(b)
 
     def _plot(self, hypothesis):
-        plot_statements(self._td_statements | self._tv_statements | self._vd_statements,
-                        self._td_statements.keys() | self._tv_statements.keys() | self._vd_statements.keys(), hypothesis)
+        plot_statements(self._tv_statements, self._td_statements, self._vd_statements,
+                        self._tv_statements.keys(), self._td_statements.keys(),  self._vd_statements.keys(), hypothesis)
         show_plot()
 
     def __str__(self) -> str:

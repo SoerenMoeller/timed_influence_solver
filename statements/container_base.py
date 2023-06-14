@@ -1,6 +1,21 @@
+import bisect
+
+
 class ContainerBase:
     def __init__(self):
         self._statements = []
+        self.newly_created = set()
+
+    def clear_new(self):
+        self.newly_created.clear()
+
+    def overlap(self, statement):
+        index: int = bisect.bisect(self._statements, statement)
+        s, e = self._get_overlap(statement, index)
+
+        if s == -1 and e == -1:
+            return []
+        return self._statements[s:e]
 
     def _get_overlap(self, statement, index: int) -> tuple[int, int]:
         lower = index

@@ -9,6 +9,7 @@ class TVContainer(ContainerBase):
         index: int = bisect.bisect(self._statements, statement)
         overlap_start, overlap_end = self._get_overlap(statement, index)
 
+        self.newly_created.add(statement)
         if overlap_start == overlap_end == -1:
             return self._statements.insert(index, statement)
 
@@ -33,12 +34,12 @@ class TVContainer(ContainerBase):
             result.append(last.relax(statement.end, last.end))
 
         self._statements = self._statements[:overlap_start] + result + self._statements[overlap_end:]
+        self.newly_created.update(result)
 
         index: int = overlap_start - 1 if overlap_start > 0 else overlap_start
         while index < len(self._statements):
             current = self._statements[index]
             changed = False
-            print(index)
             if index - 1 >= 0:
                 pre = self._statements[index-1]
                 if pre.lower_r > current.lower:
@@ -64,7 +65,9 @@ class TVContainer(ContainerBase):
                     current.upper_r -= diff
                     changed = True
 
-            if changed and index != 0:
-                index -= 1
+            if changed:
+                self.newly_created.add(current)
+                if index != 0:
+                    index -= 1
             else:
                 index += 1

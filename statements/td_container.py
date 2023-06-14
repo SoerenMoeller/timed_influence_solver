@@ -31,3 +31,5 @@ class TDContainer(ContainerBase):
             result.append(TDStatement(statement.end, last.end, last.lower, last.upper))
 
         self._statements = self._statements[:overlap_start] + result + self._statements[overlap_end:]
+        self.newly_created.update(result)
+

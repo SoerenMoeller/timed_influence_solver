@@ -36,6 +36,9 @@ class TVStatement(TDStatement):
     def __hash__(self):
         return hash((self.start, self.end, self.lower, self.upper, self.lower_r, self.upper_r))
 
+    def copy(self):
+        return TVStatement(self.start, self.end, self.lower, self.upper, self.lower_r, self.upper_r)
+
     def overlaps(self, start, end=None):
         if end is None:
             return self.overlaps(start.start, start.end)
