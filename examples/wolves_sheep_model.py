@@ -9,9 +9,11 @@ def generate_model() -> tuple[set, tuple]:
         (WOLVES, (0, 1), (50, 150), (50, 150))
     }
 
-    statements |= {(SHEEP, (i, i + SQUARE_SIZE), (0, 2), (1, 1), WOLVES) for i in range(0, 2000, SQUARE_SIZE)}
-    statements |= {(WOLVES, (i, i + SQUARE_SIZE), (0, 2), (-1, -1), SHEEP) for i in range(0, 2000, SQUARE_SIZE)}
+    statements |= {(SHEEP, (i, i + SQUARE_SIZE), (0, 2), (50, 50), WOLVES) for i in range(0, 2000, SQUARE_SIZE)}
+    statements |= {(SHEEP, (i, i + SQUARE_SIZE), (0, 2), (50, 50), WOLVES) for i in range(SQUARE_SIZE//3, 2000, SQUARE_SIZE)}
+    statements |= {(WOLVES, (i, i + SQUARE_SIZE), (0, 2), (-50, -50), SHEEP) for i in range(0, 2000, SQUARE_SIZE)}
 
-    hypothesis: tuple = (SHEEP, (95, 100), (450, 550), (450, 550))
+    hypothesis: tuple = (SHEEP, (5, 10), (450, 550), (450, 550))    # False
+    #hypothesis: tuple = (SHEEP, (5, 10), (740, 810), (490, 560))    # True
 
     return statements, hypothesis

@@ -10,7 +10,7 @@ class ContainerBase:
         self.newly_created.clear()
 
     def overlap(self, statement):
-        index: int = bisect.bisect(self._statements, statement)
+        index: int = bisect.bisect_left(self._statements, statement)
         s, e = self._get_overlap(statement, index)
 
         if s == -1 and e == -1:

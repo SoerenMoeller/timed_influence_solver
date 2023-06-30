@@ -1,22 +1,12 @@
-from ctypes import Union
-
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 
-from statements.vd_statement import VDStatement
 from statements.td_statement import TDStatement
 from statements.tv_statement import TVStatement
+from statements.vd_statement import VDStatement
 
 
 def plot_statements(tv_container, td_container, vd_container, tv_influences, td_influences, vd_influences, hypothesis=None):
-    """
-    Plots model using matplotlib. This only builds the plots, they are shown using the show_plot method
-
-    Parameters:
-        intervals (dict): contains statements accesseble via its pair of variables
-        influences (list): list of variable pairs, whose statements should be plotted
-    """
-
     _setup_plot(tv_container, tv_influences, hypothesis)
     _setup_plot(td_container, td_influences, hypothesis, derivative=True)
     _setup_plot(vd_container, vd_influences, hypothesis, derivative=True)
@@ -42,26 +32,16 @@ def _setup_plot(container: dict, influenced, hypothesis: tuple, derivative=False
 
 
 def _plot_axis(axis, index: int, hypothesis: tuple, statements_mapping: dict, influenced, derivative):
-    """
-    Sets up the axis range as needed and plots the statements onto them
-
-    Parameters:
-        index (int): index of the axis
-        hypothesis (tuple): hypothesis that should be highlighted
-        intervals (dict): contains statements accesseble via its pair of variables
-        influences (list): list of variable pairs, whose statements should be plotted
-    """
-
     statements = sorted(statements_mapping[influenced].get_statements())
     if len(statements) == 0:
         return
 
     # get min/max values
     min_x, max_x = min(st.start for st in statements), max(st.end for st in statements)
-    if statements and isinstance(statements[0], TDStatement):
-        min_y, max_y = min(st.lower for st in statements), max(st.upper for st in statements)
+    if statements and isinstance(statements[0], TVStatement):
+        min_y, max_y = min(min(st.lower, st.lower_r) for st in statements), max(max(st.upper_r, st.upper) for st in statements)
     else:
-        min_y, max_y = min(st.lower_r for st in statements), max(st.upper_r for st in statements)
+        min_y, max_y = min(st.lower for st in statements), max(st.upper for st in statements)
     if hypothesis is not None and hypothesis[0] == influenced:
         min_x = min(min_x, hypothesis[1][0])
         max_x = max(max_x, hypothesis[1][1])
@@ -89,8 +69,8 @@ def _plot_axis(axis, index: int, hypothesis: tuple, statements_mapping: dict, in
 
     # plot highlighted hypothesis
     if hypothesis is not None and hypothesis[0] == influenced:
-        statement_interval: TDStatement = TDStatement.create(hypothesis)
-        _plot_r_statement(axis[index], statement_interval, "red")
+        statement_interval: TVStatement = TVStatement.create(hypothesis)
+        _plot_t_statement(axis[index], statement_interval, "red")
 
 
 def _plot_t_statement(ax, st: TVStatement, color="black"):

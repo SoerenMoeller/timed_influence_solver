@@ -6,10 +6,11 @@ from statements.td_statement import TDStatement
 
 class TDContainer(ContainerBase):
     def add(self, statement: TDStatement):
-        index: int = bisect.bisect(self._statements, statement)
+        index: int = bisect.bisect_left(self._statements, statement)
         overlap_start, overlap_end = self._get_overlap(statement, index)
 
         if overlap_start == overlap_end == -1:
+            self.newly_created.add(statement)
             return self._statements.insert(index, statement)
 
         overlapping: list[TDStatement] = self._statements[overlap_start:overlap_end]

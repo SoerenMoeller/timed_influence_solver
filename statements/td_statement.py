@@ -40,6 +40,13 @@ class TDStatement:
             max(self.start, other.start), min(self.end, other.end),
             max(self.lower, other.lower), min(self.upper, other.upper))
 
+    def copy(self):
+        return TDStatement(self.start, self.end, self.lower, self.upper)
+
+    def relax(self, start, end):
+        self.start = start
+        self.end = end
+
     def __repr__(self):
         return f"TDStatement({self.start}, {self.end}, {self.lower}, {self.upper})"
 
