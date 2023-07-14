@@ -65,7 +65,3 @@ def join_tvs(st_a: TVStatement, st_b: TVStatement) -> Union[None, TVStatement]:
 # helper functions
 def _envelopes(fst: tuple[float, float], snd: tuple[float, float]) -> bool:
     return fst[0] <= snd[0] and fst[1] >= snd[1]
-
-
-def _overlaps(fst: tuple[float, float], snd: tuple[float, float]) -> bool:
-    return fst[0] <= snd[1] and fst[1] >= snd[0]

@@ -4,11 +4,10 @@ import sympy as sy
 
 class TVStatement(TDStatement):
     """
-    Internal representation of statements
-    Visually, this can be interpreted as an trapeze with coordidinates:
+    Internal representation of time-variable statements
+    Visually, this can be interpreted as a trapeze with coordinates:
         (start, lower), (end, lower + lower_offset), (end, upper + upper_offset), (start, upper)
 
-    namedtuple
     ----------
     start (float):
         start value of range interval
@@ -51,16 +50,17 @@ class TVStatement(TDStatement):
 
     def intersect(self, other) -> list:
         cond_1 = self.lower >= other.lower and self.lower_r >= other.lower_r or \
-                 self.lower <= other.lower and self.lower_r <= other.lower_r
+            self.lower <= other.lower and self.lower_r <= other.lower_r
         cond_2 = self.upper >= other.upper and self.upper_r >= other.upper_r or \
-                 self.upper <= other.upper and self.upper_r <= other.upper_r
+            self.upper <= other.upper and self.upper_r <= other.upper_r
         cond_3 = self.upper > other.upper and self.upper_r < other.upper_r or \
-                 self.upper < other.upper and self.upper_r > other.upper_r
+            self.upper < other.upper and self.upper_r > other.upper_r
         cond_4 = self.lower > other.lower and self.lower_r < other.lower_r or \
-                 self.lower < other.lower and self.lower_r > other.lower_r
+            self.lower < other.lower and self.lower_r > other.lower_r
         if cond_4 and cond_3:  # last case
             lo_l, hi_l, tl = get_lo_hi_l(self, other)
             lo_u, hi_u, tu = get_lo_hi_u(self, other)
+
             if tl < tu:
                 return [TVStatement(self.start, tl,
                                     max(self.lower, other.lower), min(self.upper, other.upper),
@@ -118,7 +118,7 @@ class TVStatement(TDStatement):
 
 
 def create_lin_function(x1, y1, x2, y2):
-    return lambda x: ((y2-y1)/(x2-x1)) * x + y2 - x2 * ((y2-y1)/(x2-x1))
+    return lambda x: ((y2 - y1) / (x2 - x1)) * x + y2 - x2 * ((y2 - y1) / (x2 - x1))
 
 
 def get_lo_hi_l(st_a: TVStatement, st_b: TVStatement) -> tuple[float, float, float]:

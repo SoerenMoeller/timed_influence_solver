@@ -3,12 +3,10 @@ from collections import namedtuple
 
 class TDStatement:
     """
-    Internal representation of rectangular statements. They are used for influences of the form:
-        t -> a, t -> a'
-    Visually, this can be interpreted as an rectangle with coordinates:
+    Internal representation of time-derivative statements.
+    Visually, this can be interpreted as a rectangle with coordinates:
         (start, lower), (end, lower ), (end, upper), (start, upper)
 
-    namedtuple
     ----------
     start (float):
         start value of range interval

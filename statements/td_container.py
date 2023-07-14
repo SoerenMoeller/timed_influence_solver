@@ -6,15 +6,18 @@ from statements.td_statement import TDStatement
 
 class TDContainer(ContainerBase):
     def add(self, statement: TDStatement):
+        # check where to insert
         index: int = bisect.bisect_left(self._statements, statement)
         overlap_start, overlap_end = self._get_overlap(statement, index)
 
+        # no overlapping ones found
         if overlap_start == overlap_end == -1:
             self.newly_created.add(statement)
             return self._statements.insert(index, statement)
 
         overlapping: list[TDStatement] = self._statements[overlap_start:overlap_end]
 
+        # insert statement and normalize, by pruning statements and intersecting them to prevent overlaps
         result: list[TDStatement] = []
         first: TDStatement = overlapping[0]
         if first.start < statement.start:

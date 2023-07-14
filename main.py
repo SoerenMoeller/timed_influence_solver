@@ -8,5 +8,6 @@ def main():
     solver: Solver = Solver(statements)
     solver.solve(hypothesis)
 
+
 if __name__ == "__main__":
     main()

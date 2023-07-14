@@ -9,9 +9,7 @@ class TVContainer(ContainerBase):
         return index < len(self._statements) and self._statements[index] == statement
 
     def add(self, statement: TVStatement):
-        if statement == TVStatement(1, 3, 1050.0, 1150.0, 950.0, 1050.0):
-            print("hi")
-
+        # check where to insert
         index: int = bisect.bisect_left(self._statements, statement)
         if self.contains(index, statement):
             return
@@ -21,6 +19,7 @@ class TVContainer(ContainerBase):
             self.newly_created.add(statement)
             return self._statements.insert(index, statement)
 
+        # get all overlapping statements (inclusive start point, exclusive end point)
         o = self._statements[overlap_start:overlap_end]
         overlapping: list[TVStatement] = [st for st in o if st.start != statement.end]
         diff = len(o) - len(overlapping)
@@ -28,6 +27,7 @@ class TVContainer(ContainerBase):
             self.newly_created.add(statement)
             return self._statements.insert(index, statement)
 
+        # insert statement while normalizing the model, by pruning and intersecting statements
         result: list[TVStatement] = []
         first: TVStatement = overlapping[0]
         if first.start < statement.start:
@@ -43,49 +43,26 @@ class TVContainer(ContainerBase):
 
         last: TVStatement = overlapping[-1]
         if last.end < statement.end:
-            u = statement.relax(last.end, statement.end)
-            if u.lower_r == u.upper_r:
-                print("hi")
-
             result.append(statement.relax(last.end, statement.end))
         elif statement.end < last.end:
-            u = last.relax(statement.end, last.end)
-            if u.lower_r == u.upper_r:
-                print("hi")
-
             result.append(last.relax(statement.end, last.end))
 
         self._statements = self._statements[:overlap_start] + result + self._statements[overlap_end-diff:]
         self.newly_created.update(result)
 
+        # adapt upper and lower borders to match with predecessor and successor
         index: int = overlap_start - 1 if overlap_start > 0 else overlap_start
-        # current is fucked up here lol
         while index < len(self._statements):
             current = self._statements[index]
             changed = False
+
             if index - 1 >= 0:
-                pre = self._statements[index-1]
-                if pre.lower_r > current.lower:
-                    diff = pre.lower_r - current.lower
-                    current.lower += diff
-                    current.lower_r += diff
-                    changed = True
-                if pre.upper_r < current.upper:
-                    diff = pre.upper_r - current.upper
-                    current.upper += diff
-                    current.upper_r += diff
+                pre = self._statements[index - 1]
+                if adapt_bounds(current, pre, True):
                     changed = True
             if index + 1 < len(self._statements):
-                suc = self._statements[index+1]
-                if suc.lower > current.lower_r:
-                    diff = suc.lower - current.lower_r
-                    current.lower += diff
-                    current.lower_r += diff
-                    changed = True
-                if suc.upper < current.upper_r:
-                    diff = suc.upper - current.upper_r
-                    current.upper += diff
-                    current.upper_r += diff
+                suc = self._statements[index + 1]
+                if adapt_bounds(current, suc, False):
                     changed = True
 
             if changed:
@@ -94,3 +71,19 @@ class TVContainer(ContainerBase):
                     index -= 1
             else:
                 index += 1
+
+
+def adapt_bounds(current, other, left: bool):
+    lower_cond = other.lower_r > current.lower if left else other.lower > current.lower_r
+    upper_cond = other.upper_r < current.upper if left else other.upper < current.upper_r
+
+    if lower_cond:
+        diff = abs(other.lower_r - current.lower)
+        current.lower += diff
+        current.lower_r += diff
+    if upper_cond:
+        diff = -abs(other.upper_r - current.upper)
+        current.upper += diff
+        current.upper_r += diff
+
+    return lower_cond or upper_cond

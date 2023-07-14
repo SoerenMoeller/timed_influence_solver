@@ -11,6 +11,22 @@ from statements.vd_container import VDContainer
 from statements.vd_statement import VDStatement
 
 
+def _combine_overlapping(overlapping, current, tv_container: TVContainer, from_tv: bool):
+    for o in overlapping:
+        st_a = current if from_tv else o
+        st_b = o if from_tv else current
+
+        new_st = cdr_rule(st_a, st_b)
+
+        if new_st is not None:
+            tv_container.add(new_st)
+
+        new_st = cdl_rule(st_a, st_b)
+
+        if new_st is not None:
+            tv_container.add(new_st)
+
+
 class Solver:
 
     def __init__(self, statements=None):
@@ -51,22 +67,9 @@ class Solver:
         container[var].add(statement)
 
     def solve(self, hypothesis: tuple) -> bool:
-        #self._create_dependency_graph()
-
         # if variable is a sink, that's not part of the hypothesis, remove it
         variable: str = hypothesis[0]
         hypothesis_st = TVStatement.create(hypothesis)
-        #self._remove_sink(variable)
-        #self._remove_influences_without_time()
-
-        # TODO: check if hypothesis true already?
-
-        # need initial value
-        #if variable not in self._st_queue.time_influence:
-        #    return False
-#
-        #if min(self._st_queue.time_influence[variable].get_statements()).start > hypothesis_st.start:
-        #    return False
 
         while self._greatest_end(variable) < hypothesis_st.end and self._running():
             tv_todos = {var: self._tv_statements[var].newly_created.copy() for var in self._tv_statements.keys()}
@@ -116,50 +119,10 @@ class Solver:
         td_container = self._td_statements[variable]
 
         for st_a in [st.relax(st.start, st.start) for st in tv_todo] + [st.relax(st.end, st.end) for st in tv_todo]:
-            overlapping = td_container.overlap(st_a)
-
-            # here in the first iteration something breaks (OOps its the overlapping)
-            for st_b in overlapping:
-                new_st = cdr_rule(st_a, st_b)
-
-                if new_st is not None:
-                    tv_container.add(new_st)
-
-                new_st = cdl_rule(st_a, st_b)
-
-                if new_st is not None:
-                    tv_container.add(new_st)
+            _combine_overlapping(td_container.overlap(st_a), st_a, tv_container, True)
 
         for st_b in td_todo:
-            overlapping = tv_container.overlap(st_b)
-
-            for st_a in overlapping:
-                new_st = cdr_rule(st_a, st_b)
-
-                if new_st is not None:
-                    tv_container.add(new_st)
-
-                new_st = cdl_rule(st_a, st_b)
-
-                if new_st is not None:
-                    tv_container.add(new_st)
-
-    #def _remove_influences_without_time(self):
-    #    self._dependency_graph = {a: self._dependency_graph[a] for a in self._dependency_graph
-    #                              if a in self._st_queue.time_influence}
-
-    #def _remove_sink(self, variable: str):
-    #    variable += "'"
-    #    values = functools.reduce(lambda a, b: a.union(b), self._dependency_graph.values(), set())
-    #    values.difference(self._dependency_graph.keys())#
-
-    #    self._dependency_graph = {a: self._dependency_graph[a].difference(values) for a in self._dependency_graph}
-
-    #def _create_dependency_graph(self):
-    #    for a, b in self._st_queue.var_der_influence.keys():
-    #        if a not in self._dependency_graph:
-    #            self._dependency_graph[a] = set()
-    #        self._dependency_graph[a].add(b)
+            _combine_overlapping(tv_container.overlap(st_b), st_b, tv_container, False)
 
     def _plot(self, hypothesis):
         plot_statements(self._tv_statements, self._td_statements, self._vd_statements,
