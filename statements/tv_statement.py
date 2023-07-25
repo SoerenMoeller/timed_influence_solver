@@ -103,7 +103,8 @@ class TVStatement(TDStatement):
         return []
 
     def relax(self, start: float, end: float):
-        assert start >= self.start and end <= self.end, "Relaxation not possible"
+        if not (start >= self.start and end <= self.end):
+            return None
 
         f_u = create_lin_function(self.start, self.upper, self.end, self.upper_r)
         f_l = create_lin_function(self.start, self.lower, self.end, self.lower_r)
