@@ -5,7 +5,8 @@ from solver.solver import solve
 def main():
     statements, hypothesis = wolves_sheep.generate_model()
 
-    solve(statements, hypothesis)
+    # solve(statements, hypothesis, k_mode=True, k=15)
+    solve(statements, hypothesis, k_mode=False)
 
 
 if __name__ == "__main__":

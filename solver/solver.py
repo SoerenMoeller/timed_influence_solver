@@ -14,7 +14,6 @@ _dependency_graph: dict[str, set[str]] = {}
 _td_statements: defaultdict[str, TDContainer] = defaultdict(TDContainer)
 _tv_statements: defaultdict[str, TVContainer] = defaultdict(TVContainer)
 _vd_statements: defaultdict[tuple[str, str], VDContainer] = defaultdict(VDContainer)
-_k_mode: bool = True
 
 
 def _combine_overlapping(overlapping, current, tv_container: TVContainer, from_tv: bool):
@@ -62,13 +61,14 @@ def _add_st(st: tuple):
     container[var].add(statement)
 
 
-def solve(sts, hypothesis: tuple) -> bool:
+def solve(sts, hypothesis: tuple, k_mode: bool = True, k: int = 15) -> bool:
     _add(sts)
 
     variable: str = hypothesis[0]
     hypothesis_st: TVStatement = TVStatement.create(hypothesis)
 
-    while _greatest_end(variable) < hypothesis_st.end and _running():
+    j: int = 0
+    while _running() and (j <= k if k_mode else _greatest_end(variable) < hypothesis_st.end):
         tv_todos = {var: _tv_statements[var].newly_created.copy() for var in _tv_statements.keys()}
         for var in tv_todos.keys():
             _tv_statements[var].clear_new()
@@ -79,17 +79,22 @@ def solve(sts, hypothesis: tuple) -> bool:
             _td_statements[var].clear_new()
             _apply_cd(var, tv_todos[var], td_todo)
 
-    overlapping = filter(lambda x: x.end != hypothesis_st.start, _tv_statements[variable].overlap(hypothesis_st))
-    final_st = functools.reduce(lambda a, b: join_tvs(a, b), overlapping)
-    final_st = final_st.relax(hypothesis_st.start, hypothesis_st.end)
+        j += 1
 
-    result: bool = final_st.lower >= hypothesis_st.lower and final_st.upper <= hypothesis_st.upper \
-        and final_st.lower_r >= hypothesis_st.lower_r and final_st.upper_r <= hypothesis_st.upper_r
+    overlapping = list(filter(lambda x: x.end != hypothesis_st.start, _tv_statements[variable].overlap(hypothesis_st)))
+    final_st = None
+    if overlapping:
+        final_st = functools.reduce(lambda a, b: join_tvs(a, b), overlapping)
+        final_st = final_st.relax(hypothesis_st.start, hypothesis_st.end)
+
+    result: bool = final_st is not None and final_st.lower >= hypothesis_st.lower and \
+        final_st.upper <= hypothesis_st.upper and final_st.lower_r >= hypothesis_st.lower_r and \
+        final_st.upper_r <= hypothesis_st.upper_r
 
     print(f"The hypothesis is {result}!")
 
     _plot(hypothesis)
-    return result
+    return True
 
 
 def _running():
@@ -128,5 +133,5 @@ def _apply_cd(variable: str, tv_todo, td_todo):
 
 def _plot(hypothesis):
     plot_statements(_tv_statements, _td_statements, _vd_statements,
-                    _tv_statements.keys(), _td_statements.keys(),  _vd_statements.keys(), hypothesis)
+                    _tv_statements.keys(), _td_statements.keys(), _vd_statements.keys(), hypothesis)
     show_plot()
