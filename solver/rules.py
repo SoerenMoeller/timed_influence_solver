@@ -62,6 +62,17 @@ def join_tvs(st_a: TVStatement, st_b: TVStatement) -> Union[None, TVStatement]:
     return TVStatement(st_a.start, st_b.end, st_a.lower, st_a.upper, st_b.lower_r, st_b.upper_r)
 
 
+def join_tds(st_a: TDStatement, st_b: TDStatement) -> Union[None, TDStatement]:
+    if st_a is None:
+        return st_b
+
+    if st_a.end != st_b.start:
+        return None
+
+    return TDStatement(min(st_a.start, st_b.start), max(st_a.end, st_b.end),
+                       min(st_a.lower, st_b.lower), max(st_a.upper, st_b.upper))
+
+
 # helper functions
 def _envelopes(fst: tuple[float, float], snd: tuple[float, float]) -> bool:
     return fst[0] <= snd[0] and fst[1] >= snd[1]

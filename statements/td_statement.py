@@ -1,11 +1,8 @@
-from collections import namedtuple
-
-
 class TDStatement:
     """
     Internal representation of time-derivative statements.
     Visually, this can be interpreted as a rectangle with coordinates:
-        (start, lower), (end, lower ), (end, upper), (start, upper)
+        (start, lower), (end, lower), (end, upper), (start, upper)
 
     ----------
     start (float):
@@ -45,6 +42,9 @@ class TDStatement:
         self.start = start
         self.end = end
 
+    def to_tuple(self, var):
+        return var, (self.start, self.end), (self.lower, self.upper)
+
     def __repr__(self):
         return f"TDStatement({self.start}, {self.end}, {self.lower}, {self.upper})"
 
@@ -57,6 +57,8 @@ class TDStatement:
     def __cmp__(self, other):
         if self.start != other.start:
             return -1 if self.start < other.start else 1
+        elif self.end != other.end:
+            return -1 if self.end < other.end else 1
         return 0
 
     def __lt__(self, other):

@@ -47,6 +47,8 @@ class TVContainer(ContainerBase):
         elif statement.end < last.end:
             result.append(last.relax(statement.end, last.end))
 
+        result = sorted(set(result))
+
         self._statements = self._statements[:overlap_start] + result + self._statements[overlap_end-diff:]
         self.newly_created.update(result)
 

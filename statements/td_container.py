@@ -5,9 +5,15 @@ from statements.td_statement import TDStatement
 
 
 class TDContainer(ContainerBase):
+    def contains(self, index: int, statement: TDStatement):
+        return index < len(self._statements) and self._statements[index] == statement
+
     def add(self, statement: TDStatement):
         # check where to insert
         index: int = bisect.bisect_left(self._statements, statement)
+        if self.contains(index, statement):
+            return
+
         overlap_start, overlap_end = self._get_overlap(statement, index)
 
         # no overlapping ones found
@@ -34,6 +40,7 @@ class TDContainer(ContainerBase):
         elif statement.end < last.end:
             result.append(TDStatement(statement.end, last.end, last.lower, last.upper))
 
+        result = sorted(set(result))
+
         self._statements = self._statements[:overlap_start] + result + self._statements[overlap_end:]
         self.newly_created.update(result)
-

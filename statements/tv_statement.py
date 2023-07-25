@@ -110,6 +110,9 @@ class TVStatement(TDStatement):
 
         return TVStatement(start, end, f_l(start), f_u(start), f_l(end), f_u(end))
 
+    def to_tuple(self, var):
+        return var, (self.start, self.end), (self.lower, self.upper), (self.lower_r, self.upper_r)
+
     def __repr__(self):
         return f"TVStatement({self.start}, {self.end}, {self.lower}, " + \
             f"{self.upper}, {self.lower_r}, {self.upper_r})"

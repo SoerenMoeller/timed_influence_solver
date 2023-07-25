@@ -6,10 +6,23 @@ from statements.tv_statement import TVStatement
 from statements.vd_statement import VDStatement
 
 
+def _extract_kind(hypothesis: tuple):
+    if hypothesis is None:
+        return ""
+
+    if len(hypothesis) == 5:
+        return "VD"
+    elif len(hypothesis) == 4:
+        return "TV"
+    return "TD"
+
+
 def plot_statements(tv_container, td_container, vd_container, tv_influences, td_influences, vd_influences, hypothesis=None):
-    _setup_plot(tv_container, tv_influences, hypothesis)
-    _setup_plot(td_container, td_influences, hypothesis, derivative=True)
-    _setup_plot(vd_container, vd_influences, hypothesis, derivative=True)
+    kind: str = _extract_kind(hypothesis)
+
+    _setup_plot(tv_container, tv_influences, hypothesis if kind == "TV" else None)
+    _setup_plot(td_container, td_influences, hypothesis if kind == "TD" else None, derivative=True)
+    _setup_plot(vd_container, vd_influences, hypothesis if kind == "VD" else None, derivative=True)
 
 
 def _setup_plot(container: dict, influenced, hypothesis: tuple, derivative=False):
@@ -68,9 +81,17 @@ def _plot_axis(axis, index: int, hypothesis: tuple, statements_mapping: dict, in
         _plot_r_statement(axis[index], st)
 
     # plot highlighted hypothesis
-    if hypothesis is not None and hypothesis[0] == influenced:
-        statement_interval: TVStatement = TVStatement.create(hypothesis)
-        _plot_t_statement(axis[index], statement_interval, "red")
+    kind: str = _extract_kind(hypothesis)
+    if hypothesis is not None:
+        if kind == "TV" and hypothesis[0] == influenced:
+            statement_interval: TVStatement = TVStatement.create(hypothesis)
+            _plot_t_statement(axis[index], statement_interval, "red")
+        elif kind == "TD" and hypothesis[0] == influenced:
+            statement_interval: TDStatement = TDStatement.create(hypothesis)
+            _plot_r_statement(axis[index], statement_interval, "red")
+        elif kind == "VD" and (hypothesis[0], hypothesis[-1]) == influenced:
+            statement_interval: VDStatement = VDStatement.create(hypothesis)
+            _plot_r_statement(axis[index], statement_interval, "red")
 
 
 def _plot_t_statement(ax, st: TVStatement, color="black"):
@@ -118,7 +139,7 @@ def _plot_r_statement(ax, st: TDStatement, color="black"):
         rx, ry = rect.get_xy()
         cx = rx + rect.get_width() / 2.0
         cy = ry + rect.get_height() / 2.0
-        ax.annotate(f"[{st.min_slope}, {st.max_slope}]", (cx, cy), color='black', weight='bold',
+        ax.annotate(f"[{st.min_slope}, {st.max_slope}]", (cx, cy), color=color, weight='bold',
                     fontsize=10, ha='center', va='center')
 
 

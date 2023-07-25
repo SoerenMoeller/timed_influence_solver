@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 from plotter.plotter import show_plot, plot_statements
-from solver.rules import transitivity_rule, cdr_rule, cdl_rule, join_tvs
+from solver.rules import transitivity_rule, cdr_rule, cdl_rule, join_tvs, join_tds
 import functools
 from statements.td_statement import TDStatement
 from statements.td_container import TDContainer
@@ -61,11 +61,45 @@ def _add_st(st: tuple):
     container[var].add(statement)
 
 
+def _extract_hypothesis(hypothesis: tuple):
+    if len(hypothesis) == 5:
+        statement = VDStatement.create(hypothesis)
+        kind = "VD"
+    elif len(hypothesis) == 4:
+        statement = TVStatement.create(hypothesis)
+        kind = "TV"
+    else:
+        statement = TDStatement.create(hypothesis)
+        kind = "TD"
+
+    return statement, kind
+
+
+def _check_vd(hypothesis: VDStatement, a: str, b: str) -> bool:
+    def is_valid(st: VDStatement) -> bool:
+        return st.min_slope <= hypothesis.min_slope and st.max_slope >= hypothesis.max_slope \
+            and st.start <= hypothesis.start and st.end >= hypothesis.end \
+            and st.lower <= hypothesis.lower and st.upper >= hypothesis.upper
+
+    result = bool(set(filter(is_valid, _vd_statements[(a, b)].get_statements())))
+    return _feedback(result, hypothesis.to_tuple(a, b))
+
+
+def _feedback(result: bool, hypothesis) -> bool:
+    print(f"The hypothesis is {result}!")
+    _plot(hypothesis)
+
+    return result
+
+
 def solve(sts, hypothesis: tuple, k_mode: bool = True, k: int = 15) -> bool:
     _add(sts)
 
     variable: str = hypothesis[0]
-    hypothesis_st: TVStatement = TVStatement.create(hypothesis)
+    hypothesis_st, hypothesis_kind = _extract_hypothesis(hypothesis)
+
+    if hypothesis_kind == "VD":
+        return _check_vd(hypothesis_st, hypothesis[0], hypothesis[4])
 
     j: int = 0
     while _running() and (j <= k if k_mode else _greatest_end(variable) < hypothesis_st.end):
@@ -81,20 +115,35 @@ def solve(sts, hypothesis: tuple, k_mode: bool = True, k: int = 15) -> bool:
 
         j += 1
 
-    overlapping = list(filter(lambda x: x.end != hypothesis_st.start, _tv_statements[variable].overlap(hypothesis_st)))
+    if hypothesis_kind == "TV":
+        return _check_tv(variable, hypothesis_st)
+    return _check_td(variable, hypothesis_st)
+
+
+def _check_tv(var: str, hypothesis: TVStatement) -> bool:
+    overlapping = list(filter(lambda x: x.end != hypothesis.start, _tv_statements[var].overlap(hypothesis)))
     final_st = None
     if overlapping:
         final_st = functools.reduce(lambda a, b: join_tvs(a, b), overlapping)
-        final_st = final_st.relax(hypothesis_st.start, hypothesis_st.end)
+        final_st = final_st.relax(hypothesis.start, hypothesis.end)
 
-    result: bool = final_st is not None and final_st.lower >= hypothesis_st.lower and \
-        final_st.upper <= hypothesis_st.upper and final_st.lower_r >= hypothesis_st.lower_r and \
-        final_st.upper_r <= hypothesis_st.upper_r
+    result: bool = final_st is not None and final_st.lower >= hypothesis.lower and \
+        final_st.upper <= hypothesis.upper and final_st.lower_r >= hypothesis.lower_r and \
+        final_st.upper_r <= hypothesis.upper_r
 
-    print(f"The hypothesis is {result}!")
+    return _feedback(result, hypothesis.to_tuple(var))
 
-    _plot(hypothesis)
-    return True
+
+def _check_td(var: str, hypothesis: TVStatement) -> bool:
+    overlapping = list(filter(lambda x: x.start != hypothesis.end, _td_statements[var].overlap(hypothesis)))
+    final_st = None
+    if overlapping:
+        final_st = functools.reduce(lambda a, b: join_tds(a, b), overlapping)
+        final_st.relax(hypothesis.start, hypothesis.end)
+
+    result: bool = final_st is not None and final_st.lower >= hypothesis.lower and final_st.upper <= hypothesis.upper
+
+    return _feedback(result, hypothesis.to_tuple(var))
 
 
 def _running():
