@@ -116,7 +116,8 @@ def solve(sts, hypothesis: tuple, k_mode: bool = True, k: int = 15) -> bool:
             _apply_cd(var, tv_todos[var], td_todo)
 
         j += 1
-
+    for key in _tv_statements.keys():
+        print(_tv_statements[key].get_statements())
     if hypothesis_kind == "TV":
         return _check_tv(variable, hypothesis_st)
     return _check_td(variable, hypothesis_st)
@@ -163,7 +164,7 @@ def _apply_transitive(variable: str, tv_todo):
 
         for k in influences:
             vd_container = _vd_statements[k]
-            enveloped_sts = vd_container.envelope(st_a.lower, st_a.upper)
+            enveloped_sts = vd_container.envelope(min(st_a.lower, st_a.lower_r), max(st_a.upper, st_a.upper_r))
 
             for st_b in enveloped_sts:
                 new_st = transitivity_rule(st_a, st_b)
