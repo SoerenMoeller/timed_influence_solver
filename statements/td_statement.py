@@ -55,6 +55,9 @@ class TDStatement:
         return hash((self.start, self.end, self.lower, self.upper))
 
     def __cmp__(self, other):
+        if other is None:
+            return 1
+
         if self.start != other.start:
             return -1 if self.start < other.start else 1
         elif self.end != other.end:

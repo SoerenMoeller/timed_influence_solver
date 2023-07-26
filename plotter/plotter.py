@@ -140,7 +140,7 @@ def _plot_r_statement(ax, st: TDStatement, color="black"):
         cx = rx + rect.get_width() / 2.0
         cy = ry + rect.get_height() / 2.0
         ax.annotate(f"[{st.min_slope}, {st.max_slope}]", (cx, cy), color=color, weight='bold',
-                    fontsize=10, ha='center', va='center')
+                    fontsize=4, ha='center', va='center')
 
 
 def show_plot():

@@ -95,6 +95,8 @@ def _feedback(result: bool, hypothesis) -> bool:
 def solve(sts, hypothesis: tuple, k_mode: bool = True, k: int = 15) -> bool:
     _add(sts)
 
+    tv = _tv_statements
+
     variable: str = hypothesis[0]
     hypothesis_st, hypothesis_kind = _extract_hypothesis(hypothesis)
 
@@ -125,7 +127,8 @@ def _check_tv(var: str, hypothesis: TVStatement) -> bool:
     final_st = None
     if overlapping:
         final_st = functools.reduce(lambda a, b: join_tvs(a, b), overlapping)
-        final_st = final_st.relax(hypothesis.start, hypothesis.end)
+        if final_st is not None:
+            final_st = final_st.relax(hypothesis.start, hypothesis.end)
 
     result: bool = final_st is not None and final_st.lower >= hypothesis.lower and \
         final_st.upper <= hypothesis.upper and final_st.lower_r >= hypothesis.lower_r and \
@@ -173,10 +176,12 @@ def _apply_cd(variable: str, tv_todo, td_todo):
     tv_container = _tv_statements[variable]
     td_container = _td_statements[variable]
 
-    for st_a in [st.relax(st.start, st.start) for st in tv_todo] + [st.relax(st.end, st.end) for st in tv_todo]:
+    for st_a in set([st.relax(st.start, st.start) for st in tv_todo] + [st.relax(st.end, st.end) for st in tv_todo]):
+        if st_a is None:
+            continue
         _combine_overlapping(td_container.overlap(st_a), st_a, tv_container, True)
 
-    for st_b in td_todo:
+    for st_b in set(td_todo):
         _combine_overlapping(tv_container.overlap(st_b), st_b, tv_container, False)
 
 
