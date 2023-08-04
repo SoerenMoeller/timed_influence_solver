@@ -1,7 +1,5 @@
 from statements.vd_statement import VDStatement
 
-# Maybe order to access more efficiently and memorize more
-
 
 class VDContainer:
     def __init__(self):
@@ -18,5 +16,3 @@ class VDContainer:
 
     def envelope(self, start: float, end: float) -> set:
         return {st for st in self._statements if st.start <= start and st.end >= end}
-
-    # TODO: create map for overlapping bounds, for faster overlapping (bisect of overlap bounds, union of all found)

@@ -23,3 +23,14 @@ it as a parameter as well.
 ### CSV Files
 To make data persistent, it can be saved in a csv-file. For that, each row represents a statement, following the already presented format.
 An example can be seen in [example_csv](examples/example_csv.csv).
+
+--- 
+
+### Requirements 
+
+`sympy` and `matplotlib` have to be installed. Both can be installed using pip.
+
+```
+pip3 install sympy
+pip3 install matplotlib
+```
