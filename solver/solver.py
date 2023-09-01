@@ -116,8 +116,7 @@ def solve(sts, hypothesis: tuple, k_mode: bool = True, k: int = 15) -> bool:
             _apply_cd(var, tv_todos[var], td_todo)
 
         j += 1
-    for key in _tv_statements.keys():
-        print(_tv_statements[key].get_statements())
+        
     if hypothesis_kind == "TV":
         return _check_tv(variable, hypothesis_st)
     return _check_td(variable, hypothesis_st)
@@ -159,7 +158,7 @@ def _greatest_end(variable: str):
 
 
 def _apply_transitive(variable: str, tv_todo):
-    for st_a in tv_todo:
+    for st_a in tv_todo | set([st.relax(st.start, st.start) for st in tv_todo] + [st.relax(st.end, st.end) for st in tv_todo]) :
         influences = filter(lambda k: k[0] == variable, _vd_statements.keys())
 
         for k in influences:

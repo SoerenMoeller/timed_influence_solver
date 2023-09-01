@@ -1,10 +1,12 @@
 import examples.wolves_sheep_model as wolves_sheep
+import examples.photosynthesis_model as photosynthesis_model
 from solver.csv_reader import read_csv
 from solver.solver import solve
 
 
 def main():
-    statements, hypothesis = wolves_sheep.generate_model()
+    # statements, hypothesis = wolves_sheep.generate_model()
+    statements, hypothesis = photosynthesis_model.generate_model()
 
     solve(statements, hypothesis, k_mode=True, k=15)  # tv hypothesis
     # solve(statements, hypothesis, k_mode=False)
