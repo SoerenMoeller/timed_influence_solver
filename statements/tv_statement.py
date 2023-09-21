@@ -17,10 +17,10 @@ class TVStatement(TDStatement):
         start value of domain interval
     upper (float):
         end value of domain interval
-    lower_offset (float):
-        lower offset for the end value of the range
-    upper_offset (float):
-        upper offset for the end value of the range
+    lower_r(float):
+        start value of domain interval on the right
+    upper_r(float):
+        end value of domain interval on the right
     """
 
     @classmethod

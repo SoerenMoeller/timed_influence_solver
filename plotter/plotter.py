@@ -50,16 +50,21 @@ def _plot_axis(axis, index: int, hypothesis: tuple, statements_mapping: dict, in
         return
 
     # get min/max values
-    min_x, max_x = min(st.start for st in statements), max(st.end for st in statements)
+    min_x = get_min_max(statements, "start", hypothesis, influenced, min)
+    max_x = get_min_max(statements, "end", hypothesis, influenced, max)
     if statements and isinstance(statements[0], TVStatement):
-        min_y, max_y = min(min(st.lower, st.lower_r) for st in statements), max(max(st.upper_r, st.upper) for st in statements)
+        min_y_a = get_min_max(statements, "lower", hypothesis, influenced, min)
+        min_y_b = get_min_max(statements, "lower_r", hypothesis, influenced, min)
+        min_y = min(min_y_a, min_y_b)
+
+        max_y_a = get_min_max(statements, "upper", hypothesis, influenced, max)
+        max_y_b = get_min_max(statements, "upper_r", hypothesis, influenced, max)
+        max_y = max(max_y_a, max_y_b)
     else:
-        min_y, max_y = min(st.lower for st in statements), max(st.upper for st in statements)
-    if hypothesis is not None and hypothesis[0] == influenced:
-        min_x = min(min_x, hypothesis[1][0])
-        max_x = max(max_x, hypothesis[1][1])
-        min_y = min(min_y, hypothesis[2][0])
-        max_y = max(max_y, hypothesis[2][1])
+        min_y = get_min_max(statements, "lower", hypothesis, influenced, min)
+        max_y = get_min_max(statements, "upper", hypothesis, influenced, max)
+
+    statements, hypothesis = _remove_inf_values(statements, hypothesis, min_x, max_x, min_y, max_y)
 
     # build axis and add offset to prevent statements from overlapping it
     offset_x: float = abs(max_x - min_x) if abs(max_x - min_x) != 0 else 10
@@ -92,6 +97,42 @@ def _plot_axis(axis, index: int, hypothesis: tuple, statements_mapping: dict, in
         elif kind == "VD" and (hypothesis[0], hypothesis[-1]) == influenced:
             statement_interval: VDStatement = VDStatement.create(hypothesis)
             _plot_r_statement(axis[index], statement_interval, "red")
+
+
+def _remove_inf_values(statements, hypothesis, min_x, min_y, max_x, max_y):
+    for st in statements:
+        if st.start == float('inf'):
+            st.start = min_x - 1
+        if st.end == float('inf'):
+            st.end = max_x + 1
+        if st.lower == float('inf'):
+            st.lower = min_y - 1
+        if st.upper == float('inf'):
+            st.upper = max_y + 1
+        if isinstance(st, TVStatement):
+            if st.lower_r == float('inf'):
+                st.lower_r = min_y - 1
+            if st.upper_r == float('inf'):
+                st.upper_r = max_y + 1
+
+    return statements, hypothesis
+
+
+def get_min_max(statements, field_name, hypothesis, influenced, min_max_fn):
+    values = (getattr(st, field_name) for st in statements)
+    values = set(filter(lambda val: val != float('inf'), values))
+    hypo_type = _extract_kind(hypothesis)
+
+    if hypothesis is not None and hypothesis[0] == influenced:
+        if field_name in {"start", "end"}:  # targeting x value
+            values.union({hypothesis[1][0], hypothesis[1][1]})
+        else:  # targeting y value
+            add_vals = {hypothesis[2][0], hypothesis[2][1]}
+            add_vals.union(set() if hypo_type != "TV" else {hypothesis[2][0], hypothesis[2][1]})
+            values.union(add_vals)
+    if not values:
+        return 0
+    return min_max_fn(values)
 
 
 def _plot_t_statement(ax, st: TVStatement, color="black"):
