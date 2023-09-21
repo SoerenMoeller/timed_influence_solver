@@ -123,7 +123,7 @@ def solve(sts, hypothesis: tuple, k_mode: bool = True, k: int = 15) -> bool:
 
 
 def _check_tv(var: str, hypothesis: TVStatement) -> bool:
-    overlapping = list(filter(lambda x: x.end != hypothesis.start, _tv_statements[var].overlap(hypothesis)))
+    overlapping = list(filter(lambda x: x.end != hypothesis.start and x.start != hypothesis.end, _tv_statements[var].overlap(hypothesis)))
     final_st = None
     if overlapping:
         final_st = functools.reduce(lambda a, b: join_tvs(a, b), overlapping)
@@ -138,7 +138,7 @@ def _check_tv(var: str, hypothesis: TVStatement) -> bool:
 
 
 def _check_td(var: str, hypothesis: TVStatement) -> bool:
-    overlapping = list(filter(lambda x: x.start != hypothesis.end, _td_statements[var].overlap(hypothesis)))
+    overlapping = list(filter(lambda x: x.start != hypothesis.end and x.end != hypothesis.start, _td_statements[var].overlap(hypothesis)))
     final_st = None
     if overlapping:
         final_st = functools.reduce(lambda a, b: join_tds(a, b), overlapping)

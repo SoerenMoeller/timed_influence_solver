@@ -1,6 +1,7 @@
 GLUCOSE: str = "glucose"
 LIGHT: str = "light"
 
+
 def generate_model() -> tuple[set, tuple]:
     statements: set[tuple] = {
         (LIGHT,   (0,  6),   (0,  10),  (0, 10)),
