@@ -1,5 +1,6 @@
 import examples.wolves_sheep_model as wolves_sheep
 import examples.photosynthesis_model as photosynthesis_model
+import examples.ethanol_combustion_model as ethanol_combustion_model
 from solver.csv_reader import read_csv
 from solver.solver import solve
 
@@ -7,7 +8,8 @@ from solver.solver import solve
 def main():
     # statements, hypothesis = wolves_sheep.generate_model()
     statements, hypothesis = photosynthesis_model.generate_model()
-    solve(statements, hypothesis, k_mode=True, k=15)  # tv hypothesis
+    # statements, hypothesis = ethanol_combustion_model.generate_model()
+    solve(statements, hypothesis, k_mode=True, k=15)
 
     # solve(statements, hypothesis, k_mode=False)
     # solve(statements, ("wolves", (10, 200), (0.5, 1.5), (-40, -40), "sheep"))  # vd hypothesis

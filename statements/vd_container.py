@@ -4,9 +4,6 @@ from statements.vd_statement import VDStatement
 class VDContainer:
     def __init__(self):
         self._statements: set[VDStatement] = set()
-        self._normalized = []
-        self._overlap_map: dict[float, set[VDStatement]] = {}
-        self._s_points: list[float] = []
 
     def add(self, st: VDStatement):
         self._statements.add(st)
