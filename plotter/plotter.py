@@ -52,7 +52,10 @@ def _plot_axis(axis, index: int, hypothesis: tuple, statements_mapping: dict, in
     # get min/max values
     min_x = get_min_max(statements, "start", hypothesis, influenced, min)
     max_x = get_min_max(statements, "end", hypothesis, influenced, max)
-    if statements and isinstance(statements[0], TVStatement):
+    if statements and isinstance(statements[0], VDStatement):
+        min_y = get_min_max(statements, "min_slope", hypothesis, influenced, min)
+        max_y = get_min_max(statements, "max_slope", hypothesis, influenced, max)
+    elif statements and isinstance(statements[0], TVStatement):
         min_y_a = get_min_max(statements, "lower", hypothesis, influenced, min)
         min_y_b = get_min_max(statements, "lower_r", hypothesis, influenced, min)
         min_y = min(min_y_a, min_y_b)
@@ -101,16 +104,21 @@ def _plot_axis(axis, index: int, hypothesis: tuple, statements_mapping: dict, in
 
 def _remove_inf_values(statements, hypothesis, min_x, min_y, max_x, max_y):
     for st in statements:
-        if st.start == float('inf'):
+        if isinstance(st, VDStatement):
+            if st.min_slope == float('-inf'):
+                st.min_slope = min_x - 1
+            if st.max_slope == float('inf'):
+                st.max_slope = max_x + 1 
+        if st.start == float('-inf'):
             st.start = min_x - 1
         if st.end == float('inf'):
             st.end = max_x + 1
-        if st.lower == float('inf'):
+        if st.lower == float('-inf'):
             st.lower = min_y - 1
         if st.upper == float('inf'):
             st.upper = max_y + 1
         if isinstance(st, TVStatement):
-            if st.lower_r == float('inf'):
+            if st.lower_r == float('-inf'):
                 st.lower_r = min_y - 1
             if st.upper_r == float('inf'):
                 st.upper_r = max_y + 1
@@ -167,6 +175,12 @@ def _plot_r_statement(ax, st: TDStatement, color="black"):
     width: float = st.end - st.start
     height: float = st.upper - st.lower
 
+    if isinstance(st, VDStatement):
+        bottom: float = st.start
+        left: float = st.min_slope
+        width: float = st.end - st.start
+        height: float = st.max_slope - st.min_slope
+
     # create window
     rect = mpatches.Rectangle((bottom, left), width, height,
                               fill=False,
@@ -180,7 +194,7 @@ def _plot_r_statement(ax, st: TDStatement, color="black"):
         rx, ry = rect.get_xy()
         cx = rx + rect.get_width() / 2.0
         cy = ry + rect.get_height() / 2.0
-        ax.annotate(f"[{st.min_slope}, {st.max_slope}]", (cx, cy), color=color, weight='bold',
+        ax.annotate(f"[{st.lower}, {st.upper}]", (cx, cy), color=color, weight='bold',
                     fontsize=4, ha='center', va='center')
 
 
