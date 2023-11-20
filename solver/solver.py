@@ -10,7 +10,6 @@ from statements.tv_statement import TVStatement
 from statements.vd_container import VDContainer
 from statements.vd_statement import VDStatement
 
-_dependency_graph: dict[str, set[str]] = {}
 _td_statements: defaultdict[str, TDContainer] = defaultdict(TDContainer)
 _tv_statements: defaultdict[str, TVContainer] = defaultdict(TVContainer)
 _vd_statements: defaultdict[tuple[str, str], VDContainer] = defaultdict(VDContainer)

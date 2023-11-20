@@ -21,33 +21,37 @@ def smallest_rectangle_rule(st: TVStatement) -> TDStatement:
 
 
 def cdl_rule(st_a: TVStatement, st_b: TDStatement) -> Union[TVStatement, None]:
-    if not st_a.start <= st_b.end <= st_a.end or st_b.start == st_a.start:
+    if not st_b.start <= st_a.start <= st_b.end <= st_a.end and not st_b.start <= st_a.start <= st_a.end <= st_b.end or st_b.start == st_a.start:
         return None
 
     st_b_cpy = st_b.copy()
     st_b_cpy.relax(st_b.start, st_a.start)
-    if st_b_cpy is None:
-        return None
 
-    return TVStatement(st_b_cpy.start, st_b_cpy.end,
+    result = TVStatement(st_b_cpy.start, st_b_cpy.end,
                        st_a.lower - (st_b_cpy.end - st_b_cpy.start) * st_b_cpy.upper,
                        st_a.upper - (st_b_cpy.end - st_b_cpy.start) * st_b_cpy.lower,
                        st_a.lower, st_a.upper)
 
+    if result.lower > result.upper or result.lower_r > result.upper_r:
+        return None
+    return result
+
 
 def cdr_rule(st_a: TVStatement, st_b: TDStatement) -> Union[TVStatement, None]:
-    if not st_a.start <= st_b.end <= st_a.end or st_a.end == st_b.end:
+    if not st_a.start <= st_b.start <= st_a.end <= st_b.end and not st_b.start <= st_a.start <= st_a.end <= st_b.end or st_a.end == st_b.end:
         return None
 
     st_b_cpy = st_b.copy()
     st_b_cpy.relax(st_a.end, st_b.end)
-    if st_b_cpy is None:
-        return None
 
-    return TVStatement(st_b_cpy.start, st_b_cpy.end,
+    result = TVStatement(st_b_cpy.start, st_b_cpy.end,
                        st_a.lower_r, st_a.upper_r,
                        st_a.lower_r + (st_b_cpy.end - st_b_cpy.start) * st_b_cpy.lower,
                        st_a.upper_r + (st_b_cpy.end - st_b_cpy.start) * st_b_cpy.upper)
+
+    if result.lower > result.upper or result.lower_r > result.upper_r:
+        return None
+    return result
 
 
 def join_tvs(st_a: TVStatement, st_b: TVStatement) -> Union[None, TVStatement]:
