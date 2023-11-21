@@ -1,19 +1,13 @@
-import examples.wolves_sheep_model as wolves_sheep
 import examples.photosynthesis_model as photosynthesis_model
-import examples.ethanol_combustion_model as ethanol_combustion_model
 from solver.csv_reader import read_csv
 from solver.solver import solve
 
+# there are hypothesis for TV, VD and TD statements available
 
 def main():
-    # statements, hypothesis = wolves_sheep.generate_model()
     statements, hypothesis = photosynthesis_model.generate_model()
-    # statements, hypothesis = ethanol_combustion_model.generate_model()
-    solve(statements, hypothesis, k_mode=True, k=15)
-
-    # solve(statements, hypothesis, k_mode=False)
-    # solve(statements, ("wolves", (10, 200), (0.5, 1.5), (-40, -40), "sheep"))  # vd hypothesis
-    # solve(statements, ("wolves", (0, 5), (50, 50)))  # td hypothesis
+    solve(statements, hypothesis["TD"], k_mode=True, k=15)      # Use "TV", "VD" or "TD"
+    # solve(statements, hypothesis["TV"], k_mode=False)  # do not set an upper bound k
 
     # CSV reader example
     model = read_csv("example_csv")

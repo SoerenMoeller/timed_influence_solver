@@ -157,7 +157,7 @@ def _greatest_end(variable: str):
 
 
 def _apply_transitive(variable: str, tv_todo):
-    for st_a in tv_todo | set([st.relax(st.start, st.start) for st in tv_todo] + [st.relax(st.end, st.end) for st in tv_todo]) :
+    for st_a in sorted(tv_todo):
         influences = filter(lambda k: k[0] == variable, _vd_statements.keys())
 
         for k in influences:

@@ -21,7 +21,10 @@ class TDContainer(ContainerBase):
             self.newly_created.add(statement)
             return self._statements.insert(index, statement)
 
-        overlapping: list[TDStatement] = self._statements[overlap_start:overlap_end]
+        overlapping: list[TDStatement] = [st for st in self._statements[overlap_start:overlap_end] if st.start != statement.end and st.end != statement.start]
+        if not overlapping:
+            self.newly_created.add(statement)
+            return self._statements.insert(index, statement)
 
         # insert statement and normalize, by pruning statements and intersecting them to prevent overlaps
         result: list[TDStatement] = []
@@ -40,7 +43,5 @@ class TDContainer(ContainerBase):
         elif statement.end < last.end:
             result.append(TDStatement(statement.end, last.end, last.lower, last.upper))
 
-        result = sorted(set(result))
-
-        self._statements = self._statements[:overlap_start] + result + self._statements[overlap_end:]
+        self._statements = sorted(set(self._statements) - set(overlapping) | set(result))
         self.newly_created.update(result)
